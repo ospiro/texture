@@ -73,10 +73,6 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME')
-
-
-    # In[48]:
-    
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
     x_image = x
@@ -93,17 +89,9 @@ def tfNN(x):
     W_fc1 = weight_variable([7 * 7 * 64, 1024])
     b_fc1 = bias_variable([1024])#TODO:Change to smaller dim
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-    F_bilinear_1 = weight_variable[1024,32]
-    W_bilinear_1 = weight_variable[1024,32]
-    b_bilinear_1 = bias_variable([32])
-    square_F = tf.matmul(F_bilinear_1,F_bilinear_1)
-    square = tf.matmul(h_fc1,tf.matmul(square,h_fc1)) 
-    linear = tf.matmul(h_fc1,W_bilinear_1)
-    bias = b_bilinear_1
-    h_bilinear_1 =  tf.nn.relu(square + linear + bias)
-    W_fc2 = weight_variable([32, 2])
+    W_fc2 = weight_variable([32, 1024])
     b_fc2 = bias_variable([2])
-    y_conv = tf.matmul(h_bilinear_1, W_fc2) + b_fc2
+    y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
     # layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
     # layer_1 = tf.nn.relu(layer_1)
     # layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
