@@ -35,23 +35,23 @@ random.seed(1337)
 # I    n[45]:
 # print "Asdfasdf"
 learning_rate = 0.005
-training_epochs = 30
+training_epochs = 1
 batch_size = 32
 display_step = 1
 # logs_path = './tensorflow_logs/mnist_metrics'
 # Network Parameters
 n_hidden_1 = 256 # 1st layer number of features
 n_hidden_2 = 256 # 2nd layer number of features
-n_input = [28,28,3] # MNIST data input (img shape: 28*28)
-n_classes = 10 # MNIST total classes (0-9 digits)
+n_input = [256,256] #Alexnet relu_5 output dimensions
+n_classes = 46 # DTD total classes (0-9 digits)
 margin = 1.0
-bilinear_F_dim = 5
+
     
     
     # In[46]:
     
-x_left = tf.placeholder(tf.float32, shape=[None,28,28,3], name='InputDataLeft')
-x_right = tf.placeholder(tf.float32, shape=[None,28,28,3], name='InputDataRight')
+x_left = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1]], name='InputDataLeft')
+x_right = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1]], name='InputDataRight')
 final_label = tf.placeholder(tf.float32, shape=[None, 1], name='LabelData') # 0 if the same, 1 is different
     
 x_image_left = x_left
@@ -76,20 +76,20 @@ def max_pool_2x2(x):
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
     x_image = x
-    W_conv1 = weight_variable([5, 5, 3, 32])
+    W_conv1 = weight_variable([5, 5, 1, 32])
     b_conv1 = bias_variable([32])
-    x_image = tf.reshape(x, [-1,28,28,3])
+    x_image = tf.reshape(x, [-1,n_input[0],n_input[1],1])
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     h_pool1 = max_pool_2x2(h_conv1)
     W_conv2 = weight_variable([5, 5, 32, 64])
     b_conv2 = bias_variable([64])
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
     h_pool2 = max_pool_2x2(h_conv2)
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
-    W_fc1 = weight_variable([7 * 7 * 64, 1024])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 8388608])
+    W_fc1 = weight_variable([8388608, 1024])
     b_fc1 = bias_variable([1024])#TODO:Change to smaller dim
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-    W_fc2 = weight_variable([32, 1024])
+    W_fc2 = weight_variable([1024,2])
     b_fc2 = bias_variable([2])
     y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
     # layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
@@ -166,7 +166,8 @@ def read_labeled_image_list(image_list_file,label_name_file):
     filenames = f.read().splitlines()
     labels = []
     for line in filenames:
-        labels.append(line.split('/')[-2])
+        labels.append(line.split('_')[6])
+        
     # for line in f:
     #     filename, label = line[:-1].split(' ')
     #     filenames.append(filename)
@@ -192,9 +193,12 @@ def read_images_from_disk(input_queue):
     _label = input_queue[1]
     print(input_queue[0],_label)
     file_contents = tf.read_file(input_queue[0])
-    example = tf.image.decode_jpeg(file_contents, channels=3)
+    print(file_contents)
+    example = tf.image.decode_png(file_contents,channels=1)
     print("SHAPE: ", example.get_shape().as_list())
-    return tf.random_crop(example,[28,28,3]), _label
+    #example = tf.image.resize_image_with_crop_or_pad(example, n_input[0]//2,n_input[1]//2), _label
+    #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
+    return tf.random_crop(example,[-
 
 filename = '../train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
@@ -292,9 +296,9 @@ ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
 
 # In[ ]:
 
-ans = ans[0]
 
 np.save("ans.npy",ans)
+ans = ans[0]
 # In[ ]:
 
 plt.figure(figsize=(3,3))
