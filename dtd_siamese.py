@@ -85,8 +85,8 @@ def tfNN(x):
     b_conv2 = bias_variable([64])
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
     h_pool2 = max_pool_2x2(h_conv2)
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 8388608])
-    W_fc1 = weight_variable([8388608, 1024])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 64*64*64])
+    W_fc1 = weight_variable([64*64*64, 1024])
     b_fc1 = bias_variable([1024])#TODO:Change to smaller dim
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
     W_fc2 = weight_variable([1024,2])
@@ -198,7 +198,7 @@ def read_images_from_disk(input_queue):
     print("SHAPE: ", example.get_shape().as_list())
     #example = tf.image.resize_image_with_crop_or_pad(example, n_input[0]//2,n_input[1]//2), _label
     #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
-    return tf.random_crop(example,[64,64,1])
+    return tf.random_crop(example,[64,64,1]),_label
 
 filename = '../train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
