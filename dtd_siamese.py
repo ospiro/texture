@@ -42,7 +42,7 @@ display_step = 1
 # Network Parameters
 n_hidden_1 = 256 # 1st layer number of features
 n_hidden_2 = 256 # 2nd layer number of features
-n_input = [256,256] #Alexnet relu_5 output dimensions
+n_input = [64,64,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
 margin = 1.0
 
@@ -50,8 +50,8 @@ margin = 1.0
     
     # In[46]:
     
-x_left = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1]], name='InputDataLeft')
-x_right = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1]], name='InputDataRight')
+x_left = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1],1], name='InputDataLeft')
+x_right = tf.placeholder(tf.float32, shape=[None,n_input[0],n_input[1],1], name='InputDataRight')
 final_label = tf.placeholder(tf.float32, shape=[None, 1], name='LabelData') # 0 if the same, 1 is different
     
 x_image_left = x_left
@@ -198,7 +198,7 @@ def read_images_from_disk(input_queue):
     print("SHAPE: ", example.get_shape().as_list())
     #example = tf.image.resize_image_with_crop_or_pad(example, n_input[0]//2,n_input[1]//2), _label
     #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
-    return tf.random_crop(example,[-
+    return tf.random_crop(example,[64,64,1])
 
 filename = '../train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
