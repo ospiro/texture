@@ -1,7 +1,8 @@
 import sklearn
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.linear_model import SGDClassifier
+#from sklearn.linear_model import SGDClassifier
+from sklearn.svm import SVC
 from scipy.misc import imread,imresize
 import random
 from os import listdir
@@ -15,27 +16,31 @@ def get_label(im_fn):
     arr_fn = im_fn.split('_')
     return label_dict[arr_fn[6]]
 files = listdir('/home/spiro/AlexNet/npz')
-labels = np.zeros(len(files))
+labels = np.zeros(2500)
 random.shuffle(files)
-arr = []
+features = np.zeros((2500, 256*256))
 for i,f in enumerate(files):
-    arr.append(np.load('/home/spiro/AlexNet/npz/'+f)['arr_0'])
-
-splitpoint = 4000
-valnum = len(arr)-splitpoint
-accs = np.zeros([51,2])
-for K in range(5, 256, 5):
-    features = np.zeros((len(files),256*K))
-    for i in range(len(arr)):
-        pca = PCA(n_components=K)
-        features[i,:] = np.reshape(pca.fit_transform(arr[i]),(1,-1))
-        labels[i] =get_label('/home/spiro/AlexNet/npz/' + f)
-        np.save('/home/spiro/AlexNet/PCA_features/K_'+str(K)+ '_' + str(labels[i]),features)
-    clf = SGDClassifier()
-    clf.partial_fit(features[:splitpoint],labels[:splitpoint],classes=np.unique(labels))
-    preds = clf.predict(features[splitpoint:,:])
-    np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)
-    accs[i,:] = np.array([K,np.sum(preds==labels[splitpoint:])/float(valnum)])
+    if i < 2500:
+        features[i,:] = np.sqrt(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))/np.linalg.norm(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))))
+        labels[i] = get_label('/home/spiro/AlexNet/npz/' + f)
+splitpoint = 2000
+valnum = 2500-splitpoint
+accs = np.array([0,0])#np.zeros([51,2])
+print "OK"
+for K in [5,10,50,100,150,100,250]:#range(5, 256, 5):
+    #pca_features = np.zeros((2500,256*K))
+    pca = PCA(n_components=K)
+    #features[i,:] = np.reshape(pca.fit_transform(arr[i]),(1,-1))
+    pca_features = pca.fit_transform(features)
+    print pca_features.shape
+    #np.save('/home/spiro/AlexNet/PCA_features/K_'+str(K)+ '_' + str(labels[i]),features)
+    clf = SVC()
+    clf.fit(X=pca_features[:splitpoint,:],y=labels[:splitpoint])
+    preds = clf.predict(pca_features[splitpoint:,:])
+    #np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)
+    acc = np.array([K,np.sum(preds==labels[splitpoint:])/float(valnum)])
+    print acc
+    np.vstack([accs,acc])
 np.save('/home/spiro/AlexNet/PCA_accs',accs)
 
 #splitpoint = 4000
