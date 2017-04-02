@@ -35,7 +35,7 @@ random.seed(1337)
 # I    n[45]:
 # print "Asdfasdf"
 learning_rate = 0.005
-training_epochs = 1
+training_epochs = 100
 batch_size = 32
 display_step = 1
 # logs_path = './tensorflow_logs/mnist_metrics'
@@ -75,18 +75,18 @@ def max_pool_2x2(x):
                         strides=[1, 2, 2, 1], padding='SAME')
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
-    x_image = x
+    x_image = x#tf.reshape(x,[-1,64,64,-1])
     W_conv1 = weight_variable([5, 5, 1, 32])
     b_conv1 = bias_variable([32])
-    x_image = tf.reshape(x, [-1,n_input[0],n_input[1],1])
+    x_image = tf.reshape(x, [-1,64,64,1])
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     h_pool1 = max_pool_2x2(h_conv1)
     W_conv2 = weight_variable([5, 5, 32, 64])
     b_conv2 = bias_variable([64])
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
     h_pool2 = max_pool_2x2(h_conv2)
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 64*64*64])
-    W_fc1 = weight_variable([64*64*64, 1024])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 16*16*64])
+    W_fc1 = weight_variable([16*16*64, 1024])
     b_fc1 = bias_variable([1024])#TODO:Change to smaller dim
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
     W_fc2 = weight_variable([1024,2])
@@ -125,7 +125,9 @@ with tf.name_scope('Model'):
     with tf.name_scope('Loss'):
         # Minimize error using cross entropy
 #         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
-        d = tf.reduce_sum(tf.square(pred_left - pred_right), 1, keep_dims=True)
+
+        #TODO: Keep dims??? Is reduce_indices correct??
+        d = tf.reduce_sum(tf.square(pred_left - pred_right), 0, keep_dims=True)
         d_sqrt = tf.sqrt(d)
         loss = final_label * tf.square(tf.maximum(0.0, margin - d_sqrt)) + (1 - final_label) * d
         loss = 0.5 * tf.reduce_mean(loss)
@@ -191,11 +193,11 @@ def read_images_from_disk(input_queue):
       Two tensors: the decoded image, and the string label.
     """
     _label = input_queue[1]
-    print(input_queue[0],_label)
+    #print(input_queue[0],_label)
     file_contents = tf.read_file(input_queue[0])
-    print(file_contents)
+    #print(file_contents)
     example = tf.image.decode_png(file_contents,channels=1)
-    print("SHAPE: ", example.get_shape().as_list())
+    #print("SHAPE: ", example.get_shape().as_list())
     #example = tf.image.resize_image_with_crop_or_pad(example, n_input[0]//2,n_input[1]//2), _label
     #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
     return tf.random_crop(example,[64,64,1]),_label
@@ -232,8 +234,7 @@ val_image, val_label = read_images_from_disk(input_queue=val_input_queue)
 
 
 
-images_for_val, labels_for_val = tf.train.shuffle_batch([val_image, val_label],
-batch_size = 100,num_threads=4,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
+images_for_val, labels_for_val = tf.train.shuffle_batch([val_image, val_label],batch_size = 100,num_threads=4,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
 
 
 
@@ -250,7 +251,7 @@ tf.train.start_queue_runners(sess = sess)
 for epoch in range(training_epochs):
     avg_loss = 0.0
     print (epoch)
-    total_batch = int(5640/ batch_size)
+    total_batch = int(4000/ batch_size)
     # Loop over all batches
     for i in range(total_batch):
         # print(i)
@@ -274,6 +275,7 @@ for epoch in range(training_epochs):
         # Write logs at every iteration
 #         summary_writer.add_summary(summary, epoch * total_batch + i)
         # Compute average loss
+
         avg_loss += l / total_batch
         if i%100==0:
             print(avg_loss)
@@ -292,7 +294,6 @@ for epoch in range(training_epochs):
 # Calculate accuracy
 test_xs, test_ys = sess.run([images_for_val,labels_for_val]) 
 ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
-
 
 # In[ ]:
 
