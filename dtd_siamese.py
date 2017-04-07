@@ -34,17 +34,19 @@ random.seed(1337)
 
 # I    n[45]:
 # print "Asdfasdf"
-learning_rate = 0.005
-training_epochs = 100
-batch_size = 32
+learning_rate = 0.01
+training_epochs = 300
+batch_size = tf.placeholder(tf.int32,shape= [])
+b_size = batch_size
 display_step = 1
 # logs_path = './tensorflow_logs/mnist_metrics'
 # Network Parameters
-n_hidden_1 = 256 # 1st layer number of features
-n_hidden_2 = 256 # 2nd layer number of features
-n_input = [64,64,1] #Alexnet relu_5 output dimensions
+the_size = 256
+n_hidden_1 = 128 # 1st layer number of features
+n_hidden_2 = 128# 2nd layer number of features
+n_input = [the_size,the_size,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
-margin = 1.0
+margin = 10000
 
     
     
@@ -75,45 +77,48 @@ def max_pool_2x2(x):
                         strides=[1, 2, 2, 1], padding='SAME')
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
-    x_image = x#tf.reshape(x,[-1,64,64,-1])
-    W_conv1 = weight_variable([5, 5, 1, 32])
-    b_conv1 = bias_variable([32])
-    x_image = tf.reshape(x, [-1,64,64,1])
+    x = tf.reshape(x,[-1,the_size,the_size,1])
+    #x = tf.nn.l2_normalize(x,dim=1)
+    #x = tf.sign(x)*tf.sqrt(tf.abs(x))
+    #x_image = x#tf.reshape(x,[-1,64,64,-1])
+    W_conv1 = weight_variable([5, 5, 1, 3])#32
+    b_conv1 = bias_variable([3])
+    x_image = tf.reshape(x, [-1,the_size,the_size,1])
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     h_pool1 = max_pool_2x2(h_conv1)
-    W_conv2 = weight_variable([5, 5, 32, 64])
-    b_conv2 = bias_variable([64])
+    W_conv2 = weight_variable([5, 5, 3, 6])#64
+    b_conv2 = bias_variable([6])#64
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
     h_pool2 = max_pool_2x2(h_conv2)
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 16*16*64])
-    W_fc1 = weight_variable([16*16*64, 1024])
-    b_fc1 = bias_variable([1024])#TODO:Change to smaller dim
+    h_pool2_flat = tf.reshape(h_pool2, [-1, (the_size//4)*(the_size//4)*6])#64
+    W_fc1 = weight_variable([(the_size//4)*(the_size//4)*6,128])#6-->64,64-->128
+    b_fc1 = bias_variable([128])#TODO:Change to smaller dim
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-    W_fc2 = weight_variable([1024,2])
-    b_fc2 = bias_variable([2])
+    W_fc2 = weight_variable([128,25])
+    b_fc2 = bias_variable([25])
     y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
-    # layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
-    # layer_1 = tf.nn.relu(layer_1)
-    # layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
-    # layer_2 = tf.nn.relu(layer_2)
-    # layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
-    # out_layer = tf.add(tf.matmul(layer_3, weights['w4']), biases['b4'])
+    #layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
+    #layer_1 = tf.nn.relu(layer_1)
+    #layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
+    #layer_2 = tf.nn.relu(layer_2)
+    #layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+    #out_layer = tf.add(tf.matmul(layer_3, weights['w4']), biases['b4'])
     return y_conv
     
-
-# # In[49]:
-# weights = {
-# 'w1': tf.Variable(tf.random_uniform([n_input, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
-# 'w2': tf.Variable(tf.random_uniform([n_hidden_1, n_hidden_2], minval=-4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2)), maxval=4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2))), name='W2'),
-# 'w3': tf.Variable(tf.random_uniform([n_hidden_2, n_classes], minval=-4*np.sqrt(6.0/(n_hidden_2 + n_classes)), maxval=4*np.sqrt(6.0/(n_hidden_2 + n_classes))), name='W3'),
-# 'w4': tf.Variable(tf.random_uniform([n_classes, 2], minval=-4*np.sqrt(6.0/(n_classes + 2)), maxval=4*np.sqrt(6.0/(n_classes + 2))), name='W4')
-# }
-# biases = {
-# 'b1': tf.Variable(tf.truncated_normal([n_hidden_1]) / sqrt(n_hidden_1), name='b1'),
-# 'b2': tf.Variable(tf.truncated_normal([n_hidden_2]) / sqrt(n_hidden_2), name='b2'),
-# 'b3': tf.Variable(tf.truncated_normal([n_classes]) / sqrt(n_classes), name='b3'),
-# 'b4': tf.Variable(tf.truncated_normal([2]) / sqrt(2), name='b4')
-# }
+n_input=the_size*the_size
+## In[49]:
+weights = {
+'w1': tf.Variable(tf.random_uniform([n_input, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
+'w2': tf.Variable(tf.random_uniform([n_hidden_1, n_hidden_2], minval=-4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2)), maxval=4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2))), name='W2'),
+'w3': tf.Variable(tf.random_uniform([n_hidden_2, n_classes], minval=-4*np.sqrt(6.0/(n_hidden_2 + n_classes)), maxval=4*np.sqrt(6.0/(n_hidden_2 + n_classes))), name='W3'),
+'w4': tf.Variable(tf.random_uniform([n_classes, 20], minval=-4*np.sqrt(6.0/(n_classes + 20)),maxval=4*np.sqrt(6.0/(n_classes + 20))), name='W4')
+}
+biases = {
+'b1': tf.Variable(tf.truncated_normal([n_hidden_1]) / sqrt(n_hidden_1), name='b1'),
+'b2': tf.Variable(tf.truncated_normal([n_hidden_2]) / sqrt(n_hidden_2), name='b2'),
+'b3': tf.Variable(tf.truncated_normal([n_classes]) / sqrt(n_classes), name='b3'),
+'b4': tf.Variable(tf.truncated_normal([20]) / sqrt(2), name='b4')#TODO: Fix normalization
+}
 
 
 # In[50]:
@@ -122,15 +127,21 @@ with tf.name_scope('Model'):
     # Model
     pred_left = tfNN(x_image_left)
     pred_right = tfNN(x_image_right)
+    print(pred_right.get_shape())
     with tf.name_scope('Loss'):
         # Minimize error using cross entropy
 #         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
 
         #TODO: Keep dims??? Is reduce_indices correct??
-        d = tf.reduce_sum(tf.square(pred_left - pred_right), 0, keep_dims=True)
+        #pred_left = tf.Print(pred_left,[pred_left],'pred_left = ')
+        #pred_right = tf.Print(pred_right,[pred_right],'pred_right = ')
+        d = tf.reduce_sum(tf.square(pred_left - pred_right), 1, keep_dims=True)
+        #d = tf.Print(d,[d],'unrooted = ')
         d_sqrt = tf.sqrt(d)
+        #d_sqrt = tf.Print(d_sqrt,[margin-d_sqrt])
+        #d_sqrt = tf.Print(d_sqrt, [d_sqrt], 'rooted = ')
         loss = final_label * tf.square(tf.maximum(0.0, margin - d_sqrt)) + (1 - final_label) * d
-        loss = 0.5 * tf.reduce_mean(loss)
+        loss = 0.5 * tf.reduce_sum(loss)#mean-->sum
  
 with tf.name_scope('AdamOptimizer'):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
@@ -198,9 +209,11 @@ def read_images_from_disk(input_queue):
     #print(file_contents)
     example = tf.image.decode_png(file_contents,channels=1)
     #print("SHAPE: ", example.get_shape().as_list())
-    #example = tf.image.resize_image_with_crop_or_pad(example, n_input[0]//2,n_input[1]//2), _label
+    #example = tf.image.resize_image_with_crop_or_pad(example, 256,256)
     #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
-    return tf.random_crop(example,[64,64,1]),_label
+    tf.reshape(example, [the_size,the_size,1])
+    example.set_shape([the_size,the_size,1])
+    return example,_label#tf.random_crop(example,[the_size,the_size,1]),_label
 
 filename = '../train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
@@ -211,13 +224,12 @@ labels = tf.convert_to_tensor(label_list) #, dtype=tf.int32)
 
 input_queue = tf.train.slice_input_producer([images, labels],
                                             num_epochs = 10*training_epochs,
-                                            shuffle = True)
+                                            shuffle = False)
 image, label = read_images_from_disk(input_queue=input_queue)
 
 
-
-
-images_for_train, labels_for_train = tf.train.shuffle_batch([image, label], batch_size = batch_size,num_threads=4,capacity=10000,min_after_dequeue = 6000,allow_smaller_final_batch=True)
+#should this be shuffle_batch?
+images_for_train, labels_for_train = tf.train.batch([image, label], batch_size =batch_size,num_threads=1)#,capacity=10000,min_after_dequeue = 6000,allow_smaller_final_batch=True)
 
 val_filename = '../val_DTD_PATHS.txt'
 
@@ -234,7 +246,7 @@ val_image, val_label = read_images_from_disk(input_queue=val_input_queue)
 
 
 
-images_for_val, labels_for_val = tf.train.shuffle_batch([val_image, val_label],batch_size = 100,num_threads=4,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
+images_for_val, labels_for_val = tf.train.batch([val_image, val_label],batch_size=700,num_threads=4)#,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
 
 
 
@@ -246,40 +258,53 @@ sess.run(tf.initialize_local_variables())
 tf.train.start_queue_runners(sess = sess)
 # op to write logs to Tensorboard
 #summary_writer = tf.train.FileWriter(logs_path, graph=tf.get_default_graph())
+N=50
 
 # Training cycle
 for epoch in range(training_epochs):
     avg_loss = 0.0
     print (epoch)
-    total_batch = int(4000/ batch_size)
+    #if epoch%2==0:
+    #    N=65
+    #else:
+    #    N=35
+    batch_s = sess.run(b_size,feed_dict = {batch_size: N})
+    total_batch = int(4000/ batch_s)
     # Loop over all batches
     for i in range(total_batch):
+        samecount,diffcount = 0,0
         # print(i)
         # left_batch_xs, left_batch_ys = mnist.train.next_batch(batch_size)
         # right_batch_xs, right_batch_ys = mnist.train.next_batch(batch_size)
-        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train])
-        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train])
-        y_labels = np.zeros((batch_size, 1))
-        for l in range(batch_size):
+        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+        y_labels = np.zeros((batch_s, 1))
+        for l in range(batch_s):
             # print(l)
             if left_batch_ys[l] == right_batch_ys[l]:
                 y_labels[l, 0] = 0.0
+                samecount+=1
             else:
                 y_labels[l, 0] = 1.0
+                diffcount+=1
+            #print(y_labels[l,0])
+        #print(samecount,diffcount)
         _, l = sess.run([optimizer, loss],
                                  feed_dict = {
                                               x_left: left_batch_xs,
                                               x_right: right_batch_xs,
                                               final_label: y_labels,
+                                              batch_size: N
                                              })
         # Write logs at every iteration
 #         summary_writer.add_summary(summary, epoch * total_batch + i)
         # Compute average loss
 
         avg_loss += l / total_batch
-        if i%100==0:
-            print(avg_loss)
+        #if i%100==0:
+        #    print(avg_loss)
     # Display logs per epoch step
+    
     if (epoch+1) % display_step == 0:
         print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
 
@@ -292,13 +317,25 @@ for epoch in range(training_epochs):
 
 # Test model
 # Calculate accuracy
+for i in range(5):
+    test_xs, test_ys = sess.run([images_for_train,labels_for_train],feed_dict={batch_size:700}) 
+    ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
+    print(ans[0].shape)
+    # In[ ]:
+
+
+    np.save("ans" + str(i) + ".npy",ans)
+    np.save("labs" + str(i)+ ".npy",test_ys)
+    ans = ans[0]
+
 test_xs, test_ys = sess.run([images_for_val,labels_for_val]) 
 ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
-
+print(ans[0].shape)
 # In[ ]:
 
 
-np.save("ans.npy",ans)
+np.save("ansval.npy",ans)
+np.save("labsval.npy",test_ys)
 ans = ans[0]
 # In[ ]:
 
