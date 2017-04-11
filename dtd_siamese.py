@@ -35,7 +35,7 @@ random.seed(1337)
 # I    n[45]:
 # print "Asdfasdf"
 learning_rate = 0.01
-training_epochs = 300
+training_epochs = 100
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
@@ -46,7 +46,7 @@ n_hidden_1 = 128 # 1st layer number of features
 n_hidden_2 = 128# 2nd layer number of features
 n_input = [the_size,the_size,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
-margin = 10000
+margin = 1000
 
     
     
@@ -77,38 +77,21 @@ def max_pool_2x2(x):
                         strides=[1, 2, 2, 1], padding='SAME')
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
-    x = tf.reshape(x,[-1,the_size,the_size,1])
+    x = tf.reshape(x,[-1,the_size*the_size,1])
     #x = tf.nn.l2_normalize(x,dim=1)
     #x = tf.sign(x)*tf.sqrt(tf.abs(x))
-    #x_image = x#tf.reshape(x,[-1,64,64,-1])
-    W_conv1 = weight_variable([5, 5, 1, 3])#32
-    b_conv1 = bias_variable([3])
-    x_image = tf.reshape(x, [-1,the_size,the_size,1])
-    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-    h_pool1 = max_pool_2x2(h_conv1)
-    W_conv2 = weight_variable([5, 5, 3, 6])#64
-    b_conv2 = bias_variable([6])#64
-    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-    h_pool2 = max_pool_2x2(h_conv2)
-    h_pool2_flat = tf.reshape(h_pool2, [-1, (the_size//4)*(the_size//4)*6])#64
-    W_fc1 = weight_variable([(the_size//4)*(the_size//4)*6,128])#6-->64,64-->128
-    b_fc1 = bias_variable([128])#TODO:Change to smaller dim
-    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-    W_fc2 = weight_variable([128,25])
-    b_fc2 = bias_variable([25])
-    y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
-    #layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
-    #layer_1 = tf.nn.relu(layer_1)
-    #layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
-    #layer_2 = tf.nn.relu(layer_2)
-    #layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
-    #out_layer = tf.add(tf.matmul(layer_3, weights['w4']), biases['b4'])
-    return y_conv
+    layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
+    layer_1 = tf.nn.relu(layer_1)
+    layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
+    layer_2 = tf.nn.relu(layer_2)
+    layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+    out_layer = tf.add(tf.matmul(layer_3, weights['w4']), biases['b4'])
+    return out_layer#y_conv
     
 n_input=the_size*the_size
 ## In[49]:
 weights = {
-'w1': tf.Variable(tf.random_uniform([n_input, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
+'w1': tf.Variable(tf.random_uniform([the_size*the_size, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
 'w2': tf.Variable(tf.random_uniform([n_hidden_1, n_hidden_2], minval=-4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2)), maxval=4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2))), name='W2'),
 'w3': tf.Variable(tf.random_uniform([n_hidden_2, n_classes], minval=-4*np.sqrt(6.0/(n_hidden_2 + n_classes)), maxval=4*np.sqrt(6.0/(n_hidden_2 + n_classes))), name='W3'),
 'w4': tf.Variable(tf.random_uniform([n_classes, 20], minval=-4*np.sqrt(6.0/(n_classes + 20)),maxval=4*np.sqrt(6.0/(n_classes + 20))), name='W4')
