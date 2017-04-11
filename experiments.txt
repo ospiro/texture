@@ -1,0 +1,2 @@
+20dim 10 epochs-->acc=0.16
+20dim 20 epoch-->acc=0.1
