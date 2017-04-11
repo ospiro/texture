@@ -35,7 +35,7 @@ random.seed(1337)
 # I    n[45]:
 # print "Asdfasdf"
 learning_rate = 0.01
-training_epochs = 100
+training_epochs = 40
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
@@ -77,7 +77,7 @@ def max_pool_2x2(x):
                         strides=[1, 2, 2, 1], padding='SAME')
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
-    x = tf.reshape(x,[-1,the_size*the_size,1])
+    x = tf.reshape(x,[-1,the_size*the_size])
     #x = tf.nn.l2_normalize(x,dim=1)
     #x = tf.sign(x)*tf.sqrt(tf.abs(x))
     layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])

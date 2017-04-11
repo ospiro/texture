@@ -1,6 +1,6 @@
 import sklearn
 import numpy as np
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA,TruncatedSVD
 #from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier as KNN
@@ -26,7 +26,7 @@ for i,f in enumerate(files):
     if i < N:
         features[i,:] = np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))#np.sqrt(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))/np.linalg.norm(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))))
         labels[i] = get_label('/home/spiro/AlexNet/npz/' + f)
-splitpoint = N-500
+splitpoint = N-300
 valnum = N-splitpoint
 accs = np.array([0,0])#np.zeros([51,2])
 print "OK"
@@ -41,7 +41,7 @@ for K in [10]:#[10,25,50,100,150,100,250]:#range(5, 256, 5):
     clf = SVC()
     #clf = KNN(n_neighbors = 10)
     for i in range(pca_features.shape[0]):
-        pca_features[i,:] = np.sqrt(pca_features[i,:]/np.linalg.norm(pca_features[i,:]))
+        pca_features[i,:] = np.sign(pca_features[i,:])*np.sqrt(np.abs(pca_features[i,:])/np.linalg.norm(pca_features[i,:]))
     clf.fit(X=pca_features[:splitpoint,:],y=labels[:splitpoint]) 
     preds = clf.predict(pca_features[splitpoint:,:])
     #np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)
