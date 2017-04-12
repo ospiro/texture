@@ -19,29 +19,35 @@ def get_label(im_fn):
     return label_dict[arr_fn[6]]
 files = listdir('/home/spiro/AlexNet/npz')
 random.shuffle(files)
-N=5000
+N=2500
 labels = np.zeros(N)
 features = np.zeros((N, 256*256))
 for i,f in enumerate(files):
     if i < N:
         features[i,:] = np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))#np.sqrt(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))/np.linalg.norm(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))))
         labels[i] = get_label('/home/spiro/AlexNet/npz/' + f)
-splitpoint = N-300
+splitpoint = N-500
 valnum = N-splitpoint
 accs = np.array([0,0])#np.zeros([51,2])
 print "OK"
-for K in [10]:#[10,25,50,100,150,100,250]:#range(5, 256, 5):
+for K in [2]:#[10,25,50,100,150,100,250]:#range(5, 256, 5):
     #pca_features = np.zeros((2500,256*K))
     pca = PCA(n_components=K)
     #features[i,:] = np.reshape(pca.fit_transform(arr[i]),(1,-1))
+    for i in range(features.shape[0]):
+        x = features[i,:]
+        x = np.sqrt(x/np.linalg.norm(x))
+        features[i,:] = x
     pca_features = pca.fit_transform(features)
     #pca_features = features
+    np.save('components',pca.components_)
     print pca_features.shape
     #np.save('/home/spiro/AlexNet/PCA_features/K_'+str(K)+ '_' + str(labels[i]),features)
     clf = SVC()
     #clf = KNN(n_neighbors = 10)
-    for i in range(pca_features.shape[0]):
-        pca_features[i,:] = np.sign(pca_features[i,:])*np.sqrt(np.abs(pca_features[i,:])/np.linalg.norm(pca_features[i,:]))
+  #  for i in range(pca_features.shape[0]):
+  #      x = pca_features[i,:]
+  #      x =  np.sign(x)*np.sqrt(np.abs(x)/np.linalg.norm(x))
     clf.fit(X=pca_features[:splitpoint,:],y=labels[:splitpoint]) 
     preds = clf.predict(pca_features[splitpoint:,:])
     #np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)

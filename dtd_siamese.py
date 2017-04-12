@@ -34,16 +34,16 @@ random.seed(1337)
 
 # I    n[45]:
 # print "Asdfasdf"
-learning_rate = 0.01
-training_epochs = 40
+learning_rate = 0.005
+training_epochs = 150
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
 # logs_path = './tensorflow_logs/mnist_metrics'
 # Network Parameters
 the_size = 256
-n_hidden_1 = 128 # 1st layer number of features
-n_hidden_2 = 128# 2nd layer number of features
+n_hidden_1 = 64#128 # 1st layer number of features
+n_hidden_2 = 64#128# 2nd layer number of features
 n_input = [the_size,the_size,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
 margin = 1000
@@ -94,13 +94,14 @@ weights = {
 'w1': tf.Variable(tf.random_uniform([the_size*the_size, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
 'w2': tf.Variable(tf.random_uniform([n_hidden_1, n_hidden_2], minval=-4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2)), maxval=4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2))), name='W2'),
 'w3': tf.Variable(tf.random_uniform([n_hidden_2, n_classes], minval=-4*np.sqrt(6.0/(n_hidden_2 + n_classes)), maxval=4*np.sqrt(6.0/(n_hidden_2 + n_classes))), name='W3'),
-'w4': tf.Variable(tf.random_uniform([n_classes, 20], minval=-4*np.sqrt(6.0/(n_classes + 20)),maxval=4*np.sqrt(6.0/(n_classes + 20))), name='W4')
+'w4': tf.Variable(tf.random_uniform([n_classes, 25], minval=-4*np.sqrt(6.0/(n_classes +
+25)),maxval=4*np.sqrt(6.0/(n_classes + 25))), name='W4')
 }
 biases = {
 'b1': tf.Variable(tf.truncated_normal([n_hidden_1]) / sqrt(n_hidden_1), name='b1'),
 'b2': tf.Variable(tf.truncated_normal([n_hidden_2]) / sqrt(n_hidden_2), name='b2'),
 'b3': tf.Variable(tf.truncated_normal([n_classes]) / sqrt(n_classes), name='b3'),
-'b4': tf.Variable(tf.truncated_normal([20]) / sqrt(2), name='b4')#TODO: Fix normalization
+'b4': tf.Variable(tf.truncated_normal([25]) / sqrt(2), name='b4')#TODO: Fix normalization
 }
 
 
@@ -232,7 +233,7 @@ val_image, val_label = read_images_from_disk(input_queue=val_input_queue)
 images_for_val, labels_for_val = tf.train.batch([val_image, val_label],batch_size=700,num_threads=4)#,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
 
 
-
+loss_tracker = []
 # Launch the graph
 init = tf.initialize_all_variables()
 sess = tf.Session()#config = tf.ConfigProto(log_device_placement=True))#,allow_soft_placement = True))
@@ -287,7 +288,8 @@ for epoch in range(training_epochs):
         #if i%100==0:
         #    print(avg_loss)
     # Display logs per epoch step
-    
+    if avg_loss <= 100:
+        break
     if (epoch+1) % display_step == 0:
         print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
 
@@ -326,5 +328,6 @@ plt.figure(figsize=(3,3))
 # scatter(r[:,0], r[:,1], c=[test_ys[x,:].argmax() for x in range(len(test_ys))])
 plt.scatter(ans[:,0], ans[:,1], c=test_ys[:])
 plt.savefig('siamese.png')
+print("outdim=25")
 # plt.show()
 
