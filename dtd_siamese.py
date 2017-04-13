@@ -3,6 +3,7 @@
 
 # In[43]:
 from __future__ import print_function, division
+from read_images import read_labeled_image_list, read_images_from_disk
 import sys
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -144,60 +145,6 @@ with tf.name_scope('AdamOptimizer'):
 
 
 
-def read_labeled_image_list(image_list_file,label_name_file):
-    """Reads a .txt file containing pathes and labels
-    Args:
-       image_list_file: a .txt file with one /path/to/image per line
-       label: optionally, if set label will be pasted after each line
-    Returns:
-       List with all filenames in file image_list_file
-    """
-    with open(label_name_file,'r') as l:
-        label_names = l.read().splitlines()
-    label_dict = {}
-    for i, lab in enumerate(label_names):
-        label_dict.update({lab:i})
-
-
-    f = open(image_list_file, 'r')
-    filenames = f.read().splitlines()
-    labels = []
-    for line in filenames:
-        labels.append(line.split('_')[6])
-        
-    # for line in f:
-    #     filename, label = line[:-1].split(' ')
-    #     filenames.append(filename)
-    #     labels.append(int(label))
-    pairs = [[],[]]
-    for i,f in enumerate(filenames):
-        pairs[0].append(filenames[i])
-        pairs[1].append(label_dict[labels[i]])
-    #random.shuffle(pairs)
-
-    files,labs = pairs[0],pairs[1]
-
-
-    return files, labs
-
-def read_images_from_disk(input_queue):
-    """Consumes a single filename and label as a ' '-delimited string.
-    Args:
-      filename_and_label_tensor: A scalar string tensor.
-    Returns:
-      Two tensors: the decoded image, and the string label.
-    """
-    _label = input_queue[1]
-    #print(input_queue[0],_label)
-    file_contents = tf.read_file(input_queue[0])
-    #print(file_contents)
-    example = tf.image.decode_png(file_contents,channels=1)
-    #print("SHAPE: ", example.get_shape().as_list())
-    #example = tf.image.resize_image_with_crop_or_pad(example, 256,256)
-    #tf.set_shape(example, [n_input[0]//2,n_input[1]//2])
-    tf.reshape(example, [the_size,the_size,1])
-    example.set_shape([the_size,the_size,1])
-    return example,_label#tf.random_crop(example,[the_size,the_size,1]),_label
 
 filename = '../train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
