@@ -1,15 +1,29 @@
 import numpy as np
 import os
 import random
-random.seed(1337)
+import copy
+#random.seed(1337)
 
 def notempty(l):
     return not all([d==[] for d in l])
 def makename(n):
     #return '/home/spiro/dtd/images/'+n.split('_')[0] +'/' + n
     return '/home/spiro/AlexNet/npz/relu5__home_spiro_dtd_images_' + n.split('_')[0] + '_' +  n
+def isval(n):
+    with open('../val_DTD_PATHS.txt') as f:
+        arr = f.read().splitlines()
+    return (makename(n) in arr)
+
+
+
 root = "../dtd/images/"
 all_paths = [random.sample(os.listdir(root+d),len(os.listdir(root+d))) for d in os.listdir(root)]
+new_paths = copy.deepcopy(all_paths)
+for i in range(len(all_paths)):
+    for f in all_paths[i]:
+        if isval(f) or not os.path.isfile(makename(f)):
+            new_paths[i].remove(f)
+all_paths=new_paths
 paths = []
 for i in range(4000//50):
     if all([d==[] for d in all_paths]):
@@ -22,14 +36,14 @@ for i in range(4000//50):
     for j in range(50):
         try:
             category = random.choice(range(len(all_paths)))
-            while all_paths[category]==[] and notempty(all_paths):
+            while (all_paths[category]==[] and notempty(all_paths)):# or isval(all_paths[category][-1]) or isval(all_paths[category][-2]):
                 category = random.choice(range(len(all_paths)))
             left_sample = all_paths[category].pop()
             if pair_type == 'same':
                 right_sample = all_paths[category].pop()
             elif pair_type == 'diff':
                 category = random.choice(range(len(all_paths)))
-                while all_paths[category] == [] and notempty(all_paths):
+                while (all_paths[category] == [] and notempty(all_paths)):#or isval(all_paths[category][-1]) :
                     category = random.choice(range(len(all_paths)))
                 right_sample = all_paths[category].pop()
             left.append(makename(left_sample))
@@ -41,7 +55,6 @@ for i in range(4000//50):
     paths.extend(right)
 for p in paths:
     print p
-
 
 #        if pair_type=='same':
 #            left_cat = 

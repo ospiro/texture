@@ -219,7 +219,7 @@ for epoch in range(training_epochs):
                 y_labels[l, 0] = 1.0
                 diffcount+=1
             #print(y_labels[l,0])
-        #print(samecount,diffcount)
+        print(samecount,diffcount)
         _, l = sess.run([optimizer, loss],
                                  feed_dict = {
                                               x_left: left_batch_xs,
