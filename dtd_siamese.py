@@ -35,8 +35,8 @@ random.seed(1337)
 
 # I    n[45]:
 # print "Asdfasdf"
-learning_rate = 0.005
-training_epochs = 150
+learning_rate = 0.001
+training_epochs = 20#150
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
@@ -47,7 +47,7 @@ n_hidden_1 = 64#128 # 1st layer number of features
 n_hidden_2 = 64#128# 2nd layer number of features
 n_input = [the_size,the_size,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
-margin = 1000
+margin = 100
 
     
     
@@ -63,19 +63,6 @@ x_image_right = x_right
     
     # In[47]:
     
-def weight_variable(shape):
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
-    
-def bias_variable(shape):
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
-    
-def conv2d(x, W):
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-def max_pool_2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                        strides=[1, 2, 2, 1], padding='SAME')
 def tfNN(x):
     x = tf.scalar_mul(1.0/256.0, x)
     x = tf.reshape(x,[-1,the_size*the_size])
@@ -126,7 +113,7 @@ with tf.name_scope('Model'):
         #d_sqrt = tf.Print(d_sqrt,[margin-d_sqrt])
         #d_sqrt = tf.Print(d_sqrt, [d_sqrt], 'rooted = ')
         loss = final_label * tf.square(tf.maximum(0.0, margin - d_sqrt)) + (1 - final_label) * d
-        loss = 0.5 * tf.reduce_sum(loss)#mean-->sum
+        loss = 0.5 * tf.reduce_mean(loss)#mean-->sum
  
 with tf.name_scope('AdamOptimizer'):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
@@ -200,7 +187,7 @@ for epoch in range(training_epochs):
     #else:
     #    N=35
     batch_s = sess.run(b_size,feed_dict = {batch_size: N})
-    total_batch = int(4000/ batch_s)
+    total_batch = int(40000/ batch_s)
     # Loop over all batches
     for i in range(total_batch):
         samecount,diffcount = 0,0
