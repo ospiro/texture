@@ -35,8 +35,8 @@ random.seed(1337)
 
 # I    n[45]:
 # print "Asdfasdf"
-learning_rate = 0.001
-training_epochs = 20#150
+learning_rate = 0.0001
+training_epochs = 150
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
@@ -71,25 +71,25 @@ def tfNN(x):
     layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
     layer_1 = tf.nn.relu(layer_1)
     layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
-    layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
-    out_layer = tf.add(tf.matmul(layer_3, weights['w4']), biases['b4'])
+#    layer_2 = tf.nn.relu(layer_2)
+#    layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+    out_layer = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
     return out_layer#y_conv
     
 n_input=the_size*the_size
 ## In[49]:
+pca_comp = tf.cast(tf.constant(np.load('components.npy').T),tf.float32)
 weights = {
-'w1': tf.Variable(tf.random_uniform([the_size*the_size, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
-'w2': tf.Variable(tf.random_uniform([n_hidden_1, n_hidden_2], minval=-4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2)), maxval=4*np.sqrt(6.0/(n_hidden_1 + n_hidden_2))), name='W2'),
-'w3': tf.Variable(tf.random_uniform([n_hidden_2, n_classes], minval=-4*np.sqrt(6.0/(n_hidden_2 + n_classes)), maxval=4*np.sqrt(6.0/(n_hidden_2 + n_classes))), name='W3'),
-'w4': tf.Variable(tf.random_uniform([n_classes, 25], minval=-4*np.sqrt(6.0/(n_classes +
-25)),maxval=4*np.sqrt(6.0/(n_classes + 25))), name='W4')
+'w1': tf.Variable(pca_comp, name = 'W1'),#tf.Variable(tf.random_uniform([the_size*the_size, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
+'w2': tf.Variable(tf.random_uniform([25, n_hidden_2], minval=-4*np.sqrt(6.0/(25 + n_hidden_2)), maxval=4*np.sqrt(6.0/(25 + n_hidden_2))), name='W2'),
+'w3': tf.Variable(tf.random_uniform([n_hidden_2, 25], minval=-4*np.sqrt(6.0/(n_hidden_2 + 25)), maxval=4*np.sqrt(6.0/(n_hidden_2 + 25))), name='W3'),
+'w4': tf.Variable(tf.random_uniform([25, 25], minval=-4*np.sqrt(6.0/(n_classes + 25)),maxval=4*np.sqrt(6.0/(n_classes + 25))), name='W4')
 }
 biases = {
-'b1': tf.Variable(tf.truncated_normal([n_hidden_1]) / sqrt(n_hidden_1), name='b1'),
+'b1': tf.Variable(tf.truncated_normal([25]) / sqrt(25), name='b1'),
 'b2': tf.Variable(tf.truncated_normal([n_hidden_2]) / sqrt(n_hidden_2), name='b2'),
-'b3': tf.Variable(tf.truncated_normal([n_classes]) / sqrt(n_classes), name='b3'),
-'b4': tf.Variable(tf.truncated_normal([25]) / sqrt(2), name='b4')#TODO: Fix normalization
+'b3': tf.Variable(tf.truncated_normal([25]) / sqrt(n_classes), name='b3'),
+'b4': tf.Variable(tf.truncated_normal([25]) / sqrt(25), name='b4')#TODO: Fix normalization
 }
 
 
@@ -206,7 +206,7 @@ for epoch in range(training_epochs):
                 y_labels[l, 0] = 1.0
                 diffcount+=1
             #print(y_labels[l,0])
-        print(samecount,diffcount)
+        #print(samecount,diffcount)
         _, l = sess.run([optimizer, loss],
                                  feed_dict = {
                                               x_left: left_batch_xs,
@@ -222,8 +222,8 @@ for epoch in range(training_epochs):
         #if i%100==0:
         #    print(avg_loss)
     # Display logs per epoch step
-    if avg_loss <= 100:
-        break
+    #if avg_loss <= 100:
+    #    break
     if (epoch+1) % display_step == 0:
         print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
 

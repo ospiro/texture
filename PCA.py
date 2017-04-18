@@ -6,7 +6,9 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from scipy.misc import imread,imresize
 import random
+from sklearn.cluster import KMeans
 from DTD_cluster_classifier import cluster_class
+from sklearn.metrics import homogeneity_score, completeness_score,silhouette_score
 random.seed(1337)
 from os import listdir
 label_name_file = '/home/spiro/DTD_LABELS.txt'
@@ -40,23 +42,30 @@ for K in [25]:#[10,25,50,100,150,100,250]:#range(5, 256, 5):
         x = np.sqrt(x/np.linalg.norm(x))
         features[i,:] = x
     pca_features = pca.fit_transform(features)
+    np.save('pca_features',pca_features)
     #pca_features = features
     np.save('components',pca.components_)
     print pca_features.shape
+    
     #np.save('/home/spiro/AlexNet/PCA_features/K_'+str(K)+ '_' + str(labels[i]),features)
     #clf = SVC()a
-    clf = cluster_class(K=47)
+    #clf = cluster_class(K=47)
     #clf = KNN(n_neighbors = 10)
   #  for i in range(pca_features.shape[0]):
   #      x = pca_features[i,:]
   #      x =  np.sign(x)*np.sqrt(np.abs(x)/np.linalg.norm(x))
     labels = labels.astype(int)
-    clf.fit(X=pca_features[:splitpoint,:],Y=labels[:splitpoint]) 
-    print clf.score(X=pca_features[splitpoint:,:],Y=labels[splitpoint:])
-    #preds = clf.predict(pca_features[splitpoint:,:])
-    #np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)
-    #acc = np.array([K,np.sum(preds==labels[splitpoint:])/float(valnum)])
-    #print acc
+    clf = KMeans(n_clusters = 47)
+    Z = clf.fit_predict(X=pca_features)
+    print homogeneity_score(labels,Z)
+    print completeness_score(labels,Z)
+    print silhouette_score(pca_features,labels)
+    ##clf.fit(X=pca_features[:splitpoint,:],Y=labels[:splitpoint]) 
+    ##print clf.score(X=pca_features[splitpoint:,:],Y=labels[splitpoint:])
+    ##preds = clf.predict(pca_features[splitpoint:,:])
+    ##np.save('/home/spiro/AlexNet/PCA_preds/K_'+str(K)+ '_' + str(labels[i]),preds)
+    ##acc = np.array([K,np.sum(preds==labels[splitpoint:])/float(valnum)])
+    ##print acc
     np.vstack([accs,acc])
 np.save('/home/spiro/AlexNet/PCA_accs',accs)
 
