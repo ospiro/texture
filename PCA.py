@@ -1,4 +1,6 @@
 import sklearn
+from make_pairs import makename
+import os
 import numpy as np
 from sklearn.decomposition import PCA,TruncatedSVD
 #from sklearn.linear_model import SGDClassifier
@@ -22,14 +24,36 @@ def get_label(im_fn):
     return label_dict[arr_fn[6]]
 files = listdir('/home/spiro/AlexNet/npz')
 random.shuffle(files)
-N=2500
+N=3000
+with open('/home/spiro/val_DTD_PATHS.txt') as fl:
+    vals = fl.read().splitlines()
+print len(vals)
 labels = np.zeros(N)
 features = np.zeros((N, 256*256))
-for i,f in enumerate(files):
-    if i < N:
-        features[i,:] = np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))#np.sqrt(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))/np.linalg.norm(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))))
-        labels[i] = get_label('/home/spiro/AlexNet/npz/' + f)
+count = 0
+bad=0
 splitpoint = N-500
+for i,f in enumerate(files):
+    path = f
+    f = '/home/spiro/AlexNet/npz/' + f.replace('/','_')
+    if not os.path.exists(f):
+        continue
+    if count < splitpoint and (f not in vals):
+        features[count,:] = np.reshape(imread(f),(1,-1))#np.sqrt(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))/np.linalg.norm(np.reshape(imread('/home/spiro/AlexNet/npz/'+f),(1,-1))))
+        labels[count] = get_label('/home/spiro/AlexNet/npz/' + path)
+        count+=1
+    elif count >= splitpoint and count < N and (f in vals):
+        if f not in vals:
+            print f
+        bad+=1
+        print bad
+        features[count,:] = np.reshape(imread(f),(1,-1))
+        labels[count] = get_label('/home/spiro/AlexNet/npz/' + path)
+        count+=1
+print features[np.all(features==0,axis=1)].shape
+print features[-1,:]
+print features.shape
+np.save('pca_labels',labels)
 valnum = N-splitpoint
 accs = np.array([0,0])#np.zeros([51,2])
 print "OK"
@@ -39,13 +63,15 @@ for K in [25]:#[10,25,50,100,150,100,250]:#range(5, 256, 5):
     #features[i,:] = np.reshape(pca.fit_transform(arr[i]),(1,-1))
     for i in range(features.shape[0]):
         x = features[i,:]
-        x = np.sqrt(x/np.linalg.norm(x))
+        x = np.sqrt(x/(np.linalg.norm(x)))
         features[i,:] = x
-    pca_features = pca.fit_transform(features)
+    pca_features = pca.fit_transform(features[:splitpoint,:])
     np.save('pca_features',pca_features)
     #pca_features = features
     np.save('components',pca.components_)
     print pca_features.shape
+    val_features = pca.transform(features[splitpoint:,:])
+    np.save('pca_val_features',val_features)
     
     #np.save('/home/spiro/AlexNet/PCA_features/K_'+str(K)+ '_' + str(labels[i]),features)
     #clf = SVC()a

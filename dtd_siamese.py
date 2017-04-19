@@ -36,7 +36,7 @@ random.seed(1337)
 # I    n[45]:
 # print "Asdfasdf"
 learning_rate = 0.0001
-training_epochs = 150
+training_epochs = 40#150
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
