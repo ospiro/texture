@@ -164,7 +164,7 @@ val_image, val_label = read_images_from_disk(input_queue=val_input_queue)
 
 
 
-images_for_val, labels_for_val = tf.train.batch([val_image, val_label],batch_size=700,num_threads=4)#,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
+images_for_val, labels_for_val = tf.train.batch([val_image, val_label],batch_size=700,num_threads=1)#,capacity=10000,min_after_dequeue = 200,allow_smaller_final_batch=True)
 
 
 loss_tracker = []
