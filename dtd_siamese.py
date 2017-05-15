@@ -35,8 +35,8 @@ random.seed(1337)
 
 # I    n[45]:
 # print "Asdfasdf"
-learning_rate = 0.0001
-training_epochs = 40#150
+learning_rate = 0.001
+training_epochs = 10#150
 batch_size = tf.placeholder(tf.int32,shape= [])
 b_size = batch_size
 display_step = 1
@@ -47,7 +47,7 @@ n_hidden_1 = 64#128 # 1st layer number of features
 n_hidden_2 = 64#128# 2nd layer number of features
 n_input = [the_size,the_size,1] #Alexnet relu_5 output dimensions
 n_classes = 46 # DTD total classes (0-9 digits)
-margin = 100
+margin = 10000
 
     
     
@@ -61,35 +61,43 @@ x_image_left = x_left
 x_image_right = x_right
     
     
+pca_comp = tf.cast(tf.constant(np.load('components.npy').T),tf.float32)
+pca_mean =tf.cast(np.load('pca_mean.npy'),tf.float32)    
     # In[47]:
-    
 def tfNN(x):
-    x = tf.scalar_mul(1.0/256.0, x)
+    #x = tf.scalar_mul(1.0/tf.reduce_max(x), x)
     x = tf.reshape(x,[-1,the_size*the_size])
-    #x = tf.nn.l2_normalize(x,dim=1)
-    #x = tf.sign(x)*tf.sqrt(tf.abs(x))
-    layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
+    x = tf.Print(x,[tf.shape(tf.reduce_sum(x,1,keep_dims=True))])
+    x =tf.sqrt(tf.nn.l2_normalize(x,dim=1))
+    x = tf.Print(x,[tf.shape(x)])
+    ##print(x.dtype)
+    ##x = x - pca_
+    ##x = tf.nn.l2_normalize(x,dim=1)
+    ##x = tf.sign(x)*tf.sqrt(tf.abs(x))
+    #layer_1 = tf.add(tf.matmul(x, weights['w1']), biases['b1'])
+    #b = tf.Print(biases['b1'],[tf.shape(biases['b1'])])
+    b = tf.reshape(biases['b1'],[1,-1])
+    layer_1 = tf.matmul(tf.add(x,b),weights['w1'])
     layer_1 = tf.nn.relu(layer_1)
-    layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
-#    layer_2 = tf.nn.relu(layer_2)
-#    layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
-    out_layer = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
-    return out_layer#y_conv
+    #layer_2 = tf.add(tf.matmul(layer_1, weights['w2']), biases['b2'])
+#    #layer_2 = tf.nn.relu(layer_2)
+#    #layer_3 = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+    #out_layer = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+    return layer_1#out_layer#y_conv
     
 n_input=the_size*the_size
 ## In[49]:
-pca_comp = tf.cast(tf.constant(np.load('components.npy').T),tf.float32)
 weights = {
 'w1': tf.Variable(pca_comp, name = 'W1'),#tf.Variable(tf.random_uniform([the_size*the_size, n_hidden_1], minval=-4*np.sqrt(6.0/(n_input + n_hidden_1)), maxval=4*np.sqrt(6.0/(n_input + n_hidden_1))), name='W1'),
-'w2': tf.Variable(tf.random_uniform([25, n_hidden_2], minval=-4*np.sqrt(6.0/(25 + n_hidden_2)), maxval=4*np.sqrt(6.0/(25 + n_hidden_2))), name='W2'),
-'w3': tf.Variable(tf.random_uniform([n_hidden_2, 25], minval=-4*np.sqrt(6.0/(n_hidden_2 + 25)), maxval=4*np.sqrt(6.0/(n_hidden_2 + 25))), name='W3'),
-'w4': tf.Variable(tf.random_uniform([25, 25], minval=-4*np.sqrt(6.0/(n_classes + 25)),maxval=4*np.sqrt(6.0/(n_classes + 25))), name='W4')
+'w2': tf.Variable(tf.random_uniform([50, n_hidden_2], minval=-4*np.sqrt(6.0/(50 + n_hidden_2)), maxval=4*np.sqrt(6.0/(50 + n_hidden_2))), name='W2'),
+'w3': tf.Variable(tf.random_uniform([n_hidden_2, 50], minval=-4*np.sqrt(6.0/(n_hidden_2 + 50)), maxval=4*np.sqrt(6.0/(n_hidden_2 +505))), name='W3'),
+'w4': tf.Variable(tf.random_uniform([50, 50], minval=-4*np.sqrt(6.0/(n_classes + 50)),maxval=4*np.sqrt(6.0/(n_classes + 50))), name='W4')
 }
 biases = {
-'b1': tf.Variable(tf.truncated_normal([25]) / sqrt(25), name='b1'),
+'b1': tf.Variable(-pca_mean,name='b1'),#tf.truncated_normal([50]) / sqrt(50), name='b1'),
 'b2': tf.Variable(tf.truncated_normal([n_hidden_2]) / sqrt(n_hidden_2), name='b2'),
-'b3': tf.Variable(tf.truncated_normal([25]) / sqrt(n_classes), name='b3'),
-'b4': tf.Variable(tf.truncated_normal([25]) / sqrt(25), name='b4')#TODO: Fix normalization
+'b3': tf.Variable(tf.truncated_normal([50]) / sqrt(n_classes), name='b3'),
+'b4': tf.Variable(tf.truncated_normal([50]) / sqrt(50), name='b4')#TODO: Fix normalization
 }
 
 
@@ -108,11 +116,12 @@ with tf.name_scope('Model'):
         #pred_left = tf.Print(pred_left,[pred_left],'pred_left = ')
         #pred_right = tf.Print(pred_right,[pred_right],'pred_right = ')
         d = tf.reduce_sum(tf.square(pred_left - pred_right), 1, keep_dims=True)
-        #d = tf.Print(d,[d],'unrooted = ')
-        d_sqrt = tf.sqrt(d)
+        #d = tf.Print(d,[tf.reduce_min(d)],'unrooted = ')
+       # d_sqrt = tf.sqrt(d)
         #d_sqrt = tf.Print(d_sqrt,[margin-d_sqrt])
         #d_sqrt = tf.Print(d_sqrt, [d_sqrt], 'rooted = ')
-        loss = final_label * tf.square(tf.maximum(0.0, margin - d_sqrt)) + (1 - final_label) * d
+        #loss = final_label * tf.square(tf.maximum(0.0, margin - d_sqrt)) + (1 - final_label) * d
+        loss = final_label * tf.maximum(0.0,margin-d)+ (1-final_label) * d
         loss = 0.5 * tf.reduce_mean(loss)#mean-->sum
  
 with tf.name_scope('AdamOptimizer'):
@@ -133,7 +142,7 @@ with tf.name_scope('AdamOptimizer'):
 
 
 
-filename = '../train_DTD_PATHS.txt'
+filename = '../uniq_train_DTD_PATHS.txt'
 label_file = '../DTD_LABELS.txt'
 image_list, label_list = read_labeled_image_list(filename, label_file)
 
@@ -170,72 +179,78 @@ images_for_val, labels_for_val = tf.train.batch([val_image, val_label],batch_siz
 loss_tracker = []
 # Launch the graph
 init = tf.initialize_all_variables()
-sess = tf.Session()#config = tf.ConfigProto(log_device_placement=True))#,allow_soft_placement = True))
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+#sess = tf.Session()#config = tf.ConfigProto(log_device_placement=True))#,allow_soft_placement = True))
 sess.run(init)
 sess.run(tf.initialize_local_variables())
 tf.train.start_queue_runners(sess = sess)
 # op to write logs to Tensorboard
 #summary_writer = tf.train.FileWriter(logs_path, graph=tf.get_default_graph())
 N=50
-
+saver = tf.train.Saver()
 # Training cycle
-for epoch in range(training_epochs):
-    avg_loss = 0.0
-    print (epoch)
-    #if epoch%2==0:
-    #    N=65
-    #else:
-    #    N=35
-    batch_s = sess.run(b_size,feed_dict = {batch_size: N})
-    total_batch = int(40000/ batch_s)
-    # Loop over all batches
-    for i in range(total_batch):
-        samecount,diffcount = 0,0
-        # print(i)
-        # left_batch_xs, left_batch_ys = mnist.train.next_batch(batch_size)
-        # right_batch_xs, right_batch_ys = mnist.train.next_batch(batch_size)
-        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
-        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
-        y_labels = np.zeros((batch_s, 1))
-        for l in range(batch_s):
-            # print(l)
-            if left_batch_ys[l] == right_batch_ys[l]:
-                y_labels[l, 0] = 0.0
-                samecount+=1
-            else:
-                y_labels[l, 0] = 1.0
-                diffcount+=1
-            #print(y_labels[l,0])
-        #print(samecount,diffcount)
-        _, l = sess.run([optimizer, loss],
-                                 feed_dict = {
-                                              x_left: left_batch_xs,
-                                              x_right: right_batch_xs,
-                                              final_label: y_labels,
-                                              batch_size: N
-                                             })
-        # Write logs at every iteration
-#         summary_writer.add_summary(summary, epoch * total_batch + i)
-        # Compute average loss
+rest = tf.train.Saver()
+#rest.restore(sess,'last_150')
+#for epoch in range(training_epochs):
+#    avg_loss = 0.0
+#    print (epoch)
+#    #if epoch%2==0:
+#    #    N=65
+#    #else:
+#    #    N=35
+#    batch_s = sess.run(b_size,feed_dict = {batch_size: N})
+#    total_batch = int(40000/ (2*batch_s))
+#    # Loop over all batches
+#    for i in range(total_batch):
+#        samecount,diffcount = 0,0
+#        # print(i)
+#        # left_batch_xs, left_batch_ys = mnist.train.next_batch(batch_size)
+#        # right_batch_xs, right_batch_ys = mnist.train.next_batch(batch_size)
+#        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+#        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+#        y_labels = np.zeros((batch_s, 1))
+#        for l in range(batch_s):
+#            # print(l)
+#            if left_batch_ys[l] == right_batch_ys[l]:
+#                y_labels[l, 0] = 0.0
+#                samecount+=1
+#            else:
+#                y_labels[l, 0] = 1.0
+#                diffcount+=1
+#            #print(y_labels[l,0])
+#        print(samecount,diffcount,i)
+#        _, l = sess.run([optimizer, loss],
+#                                 feed_dict = {
+#                                              x_left: left_batch_xs,
+#                                              x_right: right_batch_xs,
+#                                              final_label: y_labels,
+#                                              batch_size: N
+#                                             })
+#        # Write logs at every iteration
+##         summary_writer.add_summary(summary, epoch * total_batch + i)
+#        # Compute average loss
+#
+#        avg_loss += l / total_batch
+#      #  if i%1==0:
+#       #     print(l)
+#    # Display logs per epoch step
+#    #if avg_loss <= 100:
+#    #    break
+#    if (epoch+1) % display_step == 0:
+#        print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
+#    #if epoch==0:
+#    #    saver.save(sess,save_path='checkpt')
+#    print ("Optimization Finished!")
+#
+#    print ("Run the command line:\n"       "--> tensorboard --logdir=./tensorflow_logs "       "\nThen open http://0.0.0.0:6006/ into your web browser")
 
-        avg_loss += l / total_batch
-        #if i%100==0:
-        #    print(avg_loss)
-    # Display logs per epoch step
-    #if avg_loss <= 100:
-    #    break
-    if (epoch+1) % display_step == 0:
-        print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
-
-    print ("Optimization Finished!")
-
-    print ("Run the command line:\n"       "--> tensorboard --logdir=./tensorflow_logs "       "\nThen open http://0.0.0.0:6006/ into your web browser")
-
-
-# In[ ]:
-
-# Test model
-# Calculate accuracy
+#saver.save(sess,save_path='last_150')
+## In[ ]:
+#
+## Test model
+## Calculate accuracy
 for i in range(5):
     test_xs, test_ys = sess.run([images_for_train,labels_for_train],feed_dict={batch_size:700}) 
     ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
@@ -262,6 +277,6 @@ plt.figure(figsize=(3,3))
 # scatter(r[:,0], r[:,1], c=[test_ys[x,:].argmax() for x in range(len(test_ys))])
 plt.scatter(ans[:,0], ans[:,1], c=test_ys[:])
 plt.savefig('siamese.png')
-print("outdim=25")
+print("outdim=50")
 # plt.show()
 
