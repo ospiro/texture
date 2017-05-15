@@ -193,64 +193,64 @@ saver = tf.train.Saver()
 # Training cycle
 rest = tf.train.Saver()
 #rest.restore(sess,'last_150')
-#for epoch in range(training_epochs):
-#    avg_loss = 0.0
-#    print (epoch)
-#    #if epoch%2==0:
-#    #    N=65
-#    #else:
-#    #    N=35
-#    batch_s = sess.run(b_size,feed_dict = {batch_size: N})
-#    total_batch = int(40000/ (2*batch_s))
-#    # Loop over all batches
-#    for i in range(total_batch):
-#        samecount,diffcount = 0,0
-#        # print(i)
-#        # left_batch_xs, left_batch_ys = mnist.train.next_batch(batch_size)
-#        # right_batch_xs, right_batch_ys = mnist.train.next_batch(batch_size)
-#        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
-#        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
-#        y_labels = np.zeros((batch_s, 1))
-#        for l in range(batch_s):
-#            # print(l)
-#            if left_batch_ys[l] == right_batch_ys[l]:
-#                y_labels[l, 0] = 0.0
-#                samecount+=1
-#            else:
-#                y_labels[l, 0] = 1.0
-#                diffcount+=1
-#            #print(y_labels[l,0])
-#        print(samecount,diffcount,i)
-#        _, l = sess.run([optimizer, loss],
-#                                 feed_dict = {
-#                                              x_left: left_batch_xs,
-#                                              x_right: right_batch_xs,
-#                                              final_label: y_labels,
-#                                              batch_size: N
-#                                             })
-#        # Write logs at every iteration
-##         summary_writer.add_summary(summary, epoch * total_batch + i)
-#        # Compute average loss
-#
-#        avg_loss += l / total_batch
-#      #  if i%1==0:
-#       #     print(l)
-#    # Display logs per epoch step
-#    #if avg_loss <= 100:
-#    #    break
-#    if (epoch+1) % display_step == 0:
-#        print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
-#    #if epoch==0:
-#    #    saver.save(sess,save_path='checkpt')
-#    print ("Optimization Finished!")
-#
-#    print ("Run the command line:\n"       "--> tensorboard --logdir=./tensorflow_logs "       "\nThen open http://0.0.0.0:6006/ into your web browser")
+for epoch in range(training_epochs):
+    avg_loss = 0.0
+    print (epoch)
+    #if epoch%2==0:
+    #    N=65
+    #else:
+    #    N=35
+    batch_s = sess.run(b_size,feed_dict = {batch_size: N})
+    total_batch = int(40000/ (2*batch_s))
+    # Loop over all batches
+    for i in range(total_batch):
+        samecount,diffcount = 0,0
+        # print(i)
+        # left_batch_xs, left_batch_ys = mnist.train.next_batch(batch_size)
+        # right_batch_xs, right_batch_ys = mnist.train.next_batch(batch_size)
+        left_batch_xs, left_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+        right_batch_xs, right_batch_ys = sess.run([images_for_train,labels_for_train],feed_dict ={batch_size: N})
+        y_labels = np.zeros((batch_s, 1))
+        for l in range(batch_s):
+            # print(l)
+            if left_batch_ys[l] == right_batch_ys[l]:
+                y_labels[l, 0] = 0.0
+                samecount+=1
+            else:
+                y_labels[l, 0] = 1.0
+                diffcount+=1
+            #print(y_labels[l,0])
+        print(samecount,diffcount,i)
+        _, l = sess.run([optimizer, loss],
+                                 feed_dict = {
+                                              x_left: left_batch_xs,
+                                              x_right: right_batch_xs,
+                                              final_label: y_labels,
+                                              batch_size: N
+                                             })
+        # Write logs at every iteration
+#         summary_writer.add_summary(summary, epoch * total_batch + i)
+        # Compute average loss
 
-#saver.save(sess,save_path='last_150')
-## In[ ]:
-#
-## Test model
-## Calculate accuracy
+        avg_loss += l / total_batch
+      #  if i%1==0:
+       #     print(l)
+    # Display logs per epoch step
+    #if avg_loss <= 100:
+    #    break
+    if (epoch+1) % display_step == 0:
+        print ("Epoch:", '%04d' % (epoch+1), "loss =", "{:.9f}".format(avg_loss))
+    #if epoch==0:
+    #    saver.save(sess,save_path='checkpt')
+    print ("Optimization Finished!")
+
+    print ("Run the command line:\n"       "--> tensorboard --logdir=./tensorflow_logs "       "\nThen open http://0.0.0.0:6006/ into your web browser")
+
+saver.save(sess,save_path='last_150')
+# In[ ]:
+
+# Test model
+# Calculate accuracy
 for i in range(5):
     test_xs, test_ys = sess.run([images_for_train,labels_for_train],feed_dict={batch_size:700}) 
     ans = sess.run([pred_left], feed_dict = { x_left: test_xs})
